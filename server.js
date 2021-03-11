@@ -1,12 +1,16 @@
 'use strict';
 require('dotenv').config();
-const express     = require('express');
-const bodyParser  = require('body-parser');
-const cors        = require('cors');
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
 
-const apiRoutes         = require('./routes/api.js');
-const fccTestingRoutes  = require('./routes/fcctesting.js');
-const runner            = require('./test-runner');
+const express = require('express');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+
+const apiRoutes = require('./routes/api.js');
+const fccTestingRoutes = require('./routes/fcctesting.js');
+const runner = require('./test-runner');
 
 const app = express();
 
@@ -15,23 +19,42 @@ app.use('/public', express.static(process.cwd() + '/public'));
 app.use(cors({origin: '*'})); //For FCC testing purposes only
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({extended: true}));
+
+// Log all requests
+app.use((req, res, next) => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(`${Date.now()}: ${req.method} ${req.path} - ${req.ip}`);
+    console.log('  request params:');
+    Object.keys(req.params)
+      .forEach(key => console.log(`    ${key}: ${req.params[key]}`));
+    console.log('  request query:');
+    Object.keys(req.query)
+      .forEach(key => console.log(`    ${key}: ${req.query[key]}`));
+    console.log('  request body:');
+    Object.keys(req.body)
+      .forEach(key => console.log(`    ${key}: ${req.body[key]}`));
+  }
+  next();
+});
 
 //Sample front-end
 app.route('/b/:board/')
-  .get(function (req, res) {
+  .get((req, res) => {
     res.sendFile(process.cwd() + '/views/board.html');
   });
 app.route('/b/:board/:threadid')
-  .get(function (req, res) {
+  .get((req, res) => {
     res.sendFile(process.cwd() + '/views/thread.html');
   });
 
 //Index page (static HTML)
 app.route('/')
-  .get(function (req, res) {
+  .get((req, res) => {
     res.sendFile(process.cwd() + '/views/index.html');
   });
+
+// Helmet Configuration here
 
 //For FCC testing purposes
 fccTestingRoutes(app);
@@ -40,24 +63,40 @@ fccTestingRoutes(app);
 apiRoutes(app);
 
 //404 Not Found Middleware
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   res.status(404)
     .type('text')
     .send('Not Found');
 });
 
+//Setup server and use SSL if enabled
+let server;
+let PORT;
+if (!!process.env.ENABLE_SSL) {
+  const certOptions = {
+    key: fs.readFileSync(path.resolve('certs/server.key')),
+    cert: fs.readFileSync(path.resolve('certs/server.crt')),
+  };
+
+  server = https.createServer(certOptions, app);
+  PORT = process.env.PORT || 8443;
+} else {
+  server = app;
+  PORT = process.env.PORT || 3000;
+}
+
 //Start our server and tests!
-app.listen(process.env.PORT || 3000, function () {
-  console.log("Listening on port " + process.env.PORT);
-  if(process.env.NODE_ENV==='test') {
+const listener = server.listen(PORT, () => {
+  console.log(`Listening on port ${listener.address().port}`);
+  if (process.env.NODE_ENV === 'test') {
     console.log('Running Tests...');
-    setTimeout(function () {
+    setTimeout(() => {
       try {
         runner.run();
-      } catch(e) {
-        var error = e;
-          console.log('Tests are not valid:');
-          console.log(error);
+      } catch (e) {
+        const error = e;
+        console.log('Tests are not valid:');
+        console.log(error);
       }
     }, 1500);
   }
