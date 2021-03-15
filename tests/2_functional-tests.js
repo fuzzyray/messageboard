@@ -147,7 +147,7 @@ suite('Functional Tests', function() {
     chai.request(server)
       .put(`/api/threads/${testBoard}`)
       .send({
-        'report_id': threadId, // should be thread_id from the requirements
+        'thread_id': threadId,
       })
       .end((err, res) => {
         if (err) {
@@ -164,7 +164,7 @@ suite('Functional Tests', function() {
 
   test('Reporting a reply: PUT request to /api/replies/{board}', (done) => {
     chai.request(server)
-      .put(`/api/replies/${testBoard}/${threadId}`)
+      .put(`/api/replies/${testBoard}`)
       .send({
         'thread_id': threadId,
         'reply_id': replyId,
@@ -183,10 +183,10 @@ suite('Functional Tests', function() {
   });
 
   test(
-    'Deleting a reply with the incorrect password: DELETE request to /api/threads/{board} with an invalid delete_password',
+    'Deleting a reply with the incorrect password: DELETE request to /api/replies/{board} with an invalid delete_password',
     (done) => {
       chai.request(server)
-        .delete(`/api/threads/${testBoard}`)
+        .delete(`/api/replies/${testBoard}`)
         .send({
           'thread_id': threadId,
           'reply_id': replyId,
@@ -206,10 +206,10 @@ suite('Functional Tests', function() {
     });
 
   test(
-    'Deleting a reply with the correct password: DELETE request to /api/threads/{board} with a valid delete_password',
+    'Deleting a reply with the correct password: DELETE request to /api/replies/{board} with a valid delete_password',
     (done) => {
       chai.request(server)
-        .delete(`/api/threads/${testBoard}`)
+        .delete(`/api/replies/${testBoard}`)
         .send({
           'thread_id': threadId,
           'reply_id': replyId,
