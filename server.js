@@ -7,6 +7,7 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const helmet = require('helmet');
 
 const apiRoutes = require('./routes/api.js');
 const fccTestingRoutes = require('./routes/fcctesting.js');
@@ -25,18 +26,40 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.use((req, res, next) => {
   if (process.env.NODE_ENV !== 'test') {
     console.log(`${Date.now()}: ${req.method} ${req.path} - ${req.ip}`);
-    console.log('  request params:');
-    Object.keys(req.params)
-      .forEach(key => console.log(`    ${key}: ${req.params[key]}`));
-    console.log('  request query:');
-    Object.keys(req.query)
-      .forEach(key => console.log(`    ${key}: ${req.query[key]}`));
-    console.log('  request body:');
-    Object.keys(req.body)
-      .forEach(key => console.log(`    ${key}: ${req.body[key]}`));
   }
   next();
 });
+
+// Commented out options use helmet defaults.
+const helmetConfig = {
+  contentSecurityPolicy: {
+    directives: {
+      'default-src': ['\'self\''],
+      'base-uri': ['\'self\''],
+      'block-all-mixed-content': [],
+      'font-src': ['\'self\'', 'https:', 'data:'],
+      'frame-ancestors': ['\'self\''],
+      'img-src': ['\'self\'', 'cdn.freecodecamp.org'],
+      'object-src': ['\'none\''],
+      'script-src': ['\'self\'', 'code.jquery.com'],
+      'script-src-attr': ['\'none\''],
+      'style-src': ['\'self\'', 'https:', '\'unsafe-inline\''],
+      'upgrade-insecure-requests': [],
+    },
+  },
+  // expectCt: false,
+  referrerPolicy: {policy: 'same-origin'},
+  // hsts: false,
+  // hsts: {maxAge: 7776000},
+  // noSniff: false,
+  dnsPrefetchControl: {allow: false},
+  // ieNoOpen: false,
+  frameguard: {action: 'SAMEORIGIN'},
+  // permittedCrossDomainPolicies: false,
+  // hidePoweredBy: false,
+  // xssFilter: false,
+};
+app.use(helmet(helmetConfig));
 
 //Sample front-end
 app.route('/b/:board/')
@@ -53,8 +76,6 @@ app.route('/')
   .get((req, res) => {
     res.sendFile(process.cwd() + '/views/index.html');
   });
-
-// Helmet Configuration here
 
 //For FCC testing purposes
 fccTestingRoutes(app);
