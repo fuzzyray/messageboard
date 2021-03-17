@@ -1,5 +1,3 @@
-// https://docs.mongodb.com/manual/tutorial/model-embedded-one-to-many-relationships-between-documents/
-// https://varnerfamily.org/paul/frontend/markdown-previewer/
 const DatabaseInterface = require('./database-interface');
 const MongoClient = require('mongodb').MongoClient;
 const ObjectId = require('mongodb').ObjectID;
@@ -102,13 +100,20 @@ class DatabaseMongo extends DatabaseInterface {
       };
       this.collection.find(query, options).toArray()
         .then(data => {
-          data = data.map(d => {
-            d['replycount'] = d['replies'].length;
-            if (d['replycount'] > 3) {
-              d['replies'] = d['replies'].slice(0, 3);
+          data = data.map(thread => {
+            thread['replycount'] = thread['replies'].length;
+            if (thread['replycount'] > 3) {
+              thread['replies'] = thread['replies'].slice(0, 3);
             }
-            delete d['board'];
-            return d;
+            thread['replies'] = thread['replies'].map(reply => {
+              delete reply['reported'];
+              delete reply['delete_password'];
+              return reply;
+            });
+            delete thread['board'];
+            delete thread['reported'];
+            delete thread['delete_password'];
+            return thread;
           });
           resolve(data);
         })
@@ -124,9 +129,16 @@ class DatabaseMongo extends DatabaseInterface {
     return new Promise((resolve, reject) => {
       const query = {'board': board, '_id': new ObjectId(threadId)};
       this.collection.findOne(query)
-        .then(data => {
-          delete data['board'];
-          resolve(data);
+        .then(thread => {
+          delete thread['board'];
+          delete thread['reported'];
+          delete thread['delete_password'];
+          thread['replies'] = thread['replies'].map(reply => {
+            delete reply['reported'];
+            delete reply['delete_password'];
+            return reply;
+          });
+          resolve(thread);
         })
         .catch(err => {
           console.error(err);
