@@ -5,7 +5,7 @@ const db = new Database({'uri': process.env.DB});
 class ReplyHandler {
 
   viewThreadReplies(req, res) {
-    const messageBoard = req.params['board'].trim();
+    const messageBoard = req.params['board'].trim().toLowerCase();
     const threadId = req.query['thread_id'];
     db.listThread(messageBoard, threadId)
       .then((data) => {
@@ -17,7 +17,7 @@ class ReplyHandler {
   };
 
   createReply(req, res) {
-    const messageBoard = req.params['board'].trim();
+    const messageBoard = req.params['board'].trim().toLowerCase();
     const threadId = req.body['thread_id'];
     const text = req.body['text'];
     const deletePassword = req.body['delete_password'];
@@ -31,7 +31,7 @@ class ReplyHandler {
   };
 
   reportReply(req, res) {
-    const messageBoard = req.params['board'].trim();
+    const messageBoard = req.params['board'].trim().toLowerCase();
     const threadId = req.body['thread_id'];
     const replyId = req.body['reply_id'];
     db.reportReply(messageBoard, threadId, replyId)
@@ -44,7 +44,7 @@ class ReplyHandler {
   };
 
   deleteReply(req, res) {
-    const board = req.params['board'].trim();
+    const board = req.params['board'].trim().toLowerCase();
     const threadId = req.body['thread_id'];
     const replyid = req.body['reply_id'];
     const deletePassword = req.body['delete_password'];
