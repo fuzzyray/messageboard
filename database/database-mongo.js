@@ -181,14 +181,14 @@ class DatabaseMongo extends DatabaseInterface {
       const query = {
         'board': board,
         '_id': new ObjectId(threadId),
-        'delete_password': deletePassword
+        'delete_password': deletePassword,
       };
       this.collection.findOneAndDelete(query)
         .then((data) => {
           if (!!data.value) {
             resolve('success');
           } else {
-            resolve('incorrect password')
+            resolve('incorrect password');
           }
         })
         .catch(err => {
@@ -214,7 +214,7 @@ class DatabaseMongo extends DatabaseInterface {
           if (data.modifiedCount === 1) {
             resolve('success');
           } else {
-            resolve('incorrect password')
+            resolve('incorrect password');
           }
         })
         .catch(err => {
