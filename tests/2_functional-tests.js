@@ -38,8 +38,6 @@ suite('Functional Tests', function() {
       'text',
       'created_on',
       'bumped_on',
-      'reported',
-      'delete_password',
       'replies',
       'replycount'];
 
@@ -53,6 +51,7 @@ suite('Functional Tests', function() {
           assert.equal(res.status, 200);
           assert.isArray(res.body, 'Response should be an Array');
           assert.hasAllKeys(res.body[0], threadObjectKeys, 'Missing key(s) from thread object');
+          assert.doesNotHaveAnyKeys(res.body[0], ['reported', 'delete_password']);
           assert.isArray(res.body[0]['replies'], 'replies is not an array');
           // Save threadId and replyId
           threadId = res.body[0]['_id'];
@@ -83,8 +82,8 @@ suite('Functional Tests', function() {
   });
 
   test('Viewing a single thread with all replies: GET request to /api/replies/{board}', (done) => {
-    const threadObjectKeys = ['_id', 'text', 'created_on', 'bumped_on', 'reported', 'delete_password', 'replies'];
-    const replyObjectKeys = ['_id', 'text', 'created_on', 'reported', 'delete_password'];
+    const threadObjectKeys = ['_id', 'text', 'created_on', 'bumped_on', 'replies'];
+    const replyObjectKeys = ['_id', 'text', 'created_on'];
 
     chai.request(server)
       .get(`/api/replies/${testBoard}`)
@@ -97,8 +96,10 @@ suite('Functional Tests', function() {
           assert.equal(res.status, 200);
           assert.isObject(res.body, 'Response should be an object');
           assert.hasAllKeys(res.body, threadObjectKeys, 'Missing key(s) from thread object');
+          assert.doesNotHaveAnyKeys(res.body, ['reported', 'delete_password']);
           assert.isArray(res.body['replies'], 'replies in not an array');
           assert.hasAllKeys(res.body['replies'][0], replyObjectKeys, 'Missing key(s) from reply object');
+          assert.doesNotHaveAnyKeys(res.body['replies'][0], ['reported', 'delete_password']);
           replyId = res.body['replies'][0]['_id'];
         }
         done();
