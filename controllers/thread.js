@@ -17,8 +17,8 @@ class ThreadHandler {
   createThread(req, res) {
     const messageBoard = req.body.hasOwnProperty('board') ? req.body['board'].trim() : req.params['board'].trim();
     const text = req.body['text'];
-    const delete_password = req.body['delete_password'];
-    db.createThread(messageBoard, text, delete_password)
+    const deletePassword = req.body['delete_password'];
+    db.createThread(messageBoard, text, deletePassword)
       .then(() => {
         res.redirect(`/b/${encodeURIComponent(messageBoard)}`);
       })
